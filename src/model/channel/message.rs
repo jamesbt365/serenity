@@ -174,10 +174,11 @@ impl Message {
     pub async fn crosspost(&self, cache_http: impl CacheHttp) -> Result<Message> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                if self.author.id != cache.current_user().id && self.guild_id.is_some() {
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                if self.author.id != cache.current_user().id {
                     utils::user_has_perms_cache(
                         cache,
+                        guild_id,
                         self.channel_id,
                         Permissions::MANAGE_MESSAGES,
                     )?;
@@ -270,10 +271,11 @@ impl Message {
     pub async fn delete(&self, cache_http: impl CacheHttp) -> Result<()> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
                 if self.author.id != cache.current_user().id {
                     utils::user_has_perms_cache(
                         cache,
+                        guild_id,
                         self.channel_id,
                         Permissions::MANAGE_MESSAGES,
                     )?;
@@ -297,8 +299,13 @@ impl Message {
     pub async fn delete_reactions(&self, cache_http: impl CacheHttp) -> Result<()> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                utils::user_has_perms_cache(cache, self.channel_id, Permissions::MANAGE_MESSAGES)?;
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                utils::user_has_perms_cache(
+                    cache,
+                    guild_id,
+                    self.channel_id,
+                    Permissions::MANAGE_MESSAGES,
+                )?;
             }
         }
 
@@ -342,8 +349,13 @@ impl Message {
     ) -> Result<()> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                utils::user_has_perms_cache(cache, self.channel_id, Permissions::MANAGE_MESSAGES)?;
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                utils::user_has_perms_cache(
+                    cache,
+                    guild_id,
+                    self.channel_id,
+                    Permissions::MANAGE_MESSAGES,
+                )?;
             }
         }
 
@@ -515,14 +527,13 @@ impl Message {
     pub async fn pin(&self, cache_http: impl CacheHttp) -> Result<()> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                if self.guild_id.is_some() {
-                    utils::user_has_perms_cache(
-                        cache,
-                        self.channel_id,
-                        Permissions::MANAGE_MESSAGES,
-                    )?;
-                }
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                utils::user_has_perms_cache(
+                    cache,
+                    guild_id,
+                    self.channel_id,
+                    Permissions::MANAGE_MESSAGES,
+                )?;
             }
         }
 
@@ -559,9 +570,10 @@ impl Message {
         #[cfg(feature = "cache")]
         {
             if let Some(cache) = cache_http.cache() {
-                if self.guild_id.is_some() {
+                if let Some(guild_id) = self.guild_id {
                     utils::user_has_perms_cache(
                         cache,
+                        guild_id,
                         self.channel_id,
                         Permissions::ADD_REACTIONS,
                     )?;
@@ -670,14 +682,13 @@ impl Message {
     ) -> Result<Message> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                if self.guild_id.is_some() {
-                    utils::user_has_perms_cache(
-                        cache,
-                        self.channel_id,
-                        Permissions::SEND_MESSAGES,
-                    )?;
-                }
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                utils::user_has_perms_cache(
+                    cache,
+                    guild_id,
+                    self.channel_id,
+                    Permissions::SEND_MESSAGES,
+                )?;
             }
         }
 
@@ -738,14 +749,13 @@ impl Message {
     pub async fn unpin(&self, cache_http: impl CacheHttp) -> Result<()> {
         #[cfg(feature = "cache")]
         {
-            if let Some(cache) = cache_http.cache() {
-                if self.guild_id.is_some() {
-                    utils::user_has_perms_cache(
-                        cache,
-                        self.channel_id,
-                        Permissions::MANAGE_MESSAGES,
-                    )?;
-                }
+            if let (Some(cache), Some(guild_id)) = (cache_http.cache(), self.guild_id) {
+                utils::user_has_perms_cache(
+                    cache,
+                    guild_id,
+                    self.channel_id,
+                    Permissions::MANAGE_MESSAGES,
+                )?;
             }
         }
 
