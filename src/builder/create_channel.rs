@@ -271,9 +271,6 @@ impl<'a> CreateChannel<'a> {
         cache_http: impl CacheHttp,
         guild_id: GuildId,
     ) -> Result<GuildChannel> {
-        #[cfg(feature = "cache")]
-        crate::utils::user_has_guild_perms(&cache_http, guild_id, Permissions::MANAGE_CHANNELS)?;
-
         cache_http.http().create_channel(guild_id, &self, self.audit_log_reason).await
     }
 }
