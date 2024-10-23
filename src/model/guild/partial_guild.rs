@@ -1046,6 +1046,24 @@ impl PartialGuild {
         )
     }
 
+    /// Calculate a [`PartialMember`]'s permissions in the guild.
+    #[inline]
+    #[must_use]
+    pub fn partial_member_permissions(
+        &self,
+        user_id: UserId,
+        member: &PartialMember,
+    ) -> Permissions {
+        Guild::user_permissions_in_(
+            None,
+            user_id,
+            &member.roles,
+            self.id,
+            &self.roles,
+            self.owner_id,
+        )
+    }
+
     /// Calculate a [`PartialMember`]'s permissions in a given channel in a guild.
     ///
     /// # Panics

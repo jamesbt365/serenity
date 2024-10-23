@@ -1918,6 +1918,24 @@ impl Guild {
         )
     }
 
+    /// Calculate a [`PartialMember`]'s permissions in the guild.
+    #[inline]
+    #[must_use]
+    pub fn partial_member_permissions(
+        &self,
+        user_id: UserId,
+        member: &PartialMember,
+    ) -> Permissions {
+        Self::user_permissions_in_(
+            None,
+            user_id,
+            &member.roles,
+            self.id,
+            &self.roles,
+            self.owner_id,
+        )
+    }
+
     /// Moves a member to a specific voice channel.
     ///
     /// Requires the [Move Members] permission.
