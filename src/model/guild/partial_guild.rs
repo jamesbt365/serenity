@@ -1055,7 +1055,7 @@ impl PartialGuild {
     #[must_use]
     pub fn partial_member_permissions(
         &self,
-        user_id: UserId,
+        member_id: UserId,
         member: &PartialMember,
     ) -> Permissions {
         if let Some(user) = &member.user {
@@ -1064,7 +1064,7 @@ impl PartialGuild {
 
         Guild::user_permissions_in_(
             None,
-            user_id,
+            member_id,
             &member.roles,
             self.id,
             &self.roles,
