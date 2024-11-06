@@ -338,7 +338,7 @@ impl Member {
     pub fn permissions(&self, cache: &Cache) -> Result<Permissions> {
         let guild = cache.guild(self.guild_id).ok_or(ModelError::GuildNotFound)?;
 
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         Ok(guild.member_permissions(self))
     }
 
