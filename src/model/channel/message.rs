@@ -573,35 +573,13 @@ impl Message {
         cache_http: impl CacheHttp,
         reaction_type: impl Into<ReactionType>,
     ) -> Result<Reaction> {
-        self.react_(cache_http, reaction_type.into(), false).await
-    }
-
-    /// React to the message with a custom [`Emoji`] or unicode character.
-    ///
-    /// **Note**: Requires  [Add Reactions] and [Use External Emojis] permissions.
-    ///
-    /// # Errors
-    ///
-    /// If the `cache` is enabled, returns a [`ModelError::InvalidPermissions`] if the current user
-    /// does not have the required [permissions].
-    ///
-    /// [Add Reactions]: Permissions::ADD_REACTIONS
-    /// [Use External Emojis]: Permissions::USE_EXTERNAL_EMOJIS
-    /// [permissions]: crate::model::permissions
-    #[inline]
-    pub async fn super_react(
-        &self,
-        cache_http: impl CacheHttp,
-        reaction_type: impl Into<ReactionType>,
-    ) -> Result<Reaction> {
-        self.react_(cache_http, reaction_type.into(), true).await
+        self.react_(cache_http, reaction_type.into()).await
     }
 
     async fn react_(
         &self,
         cache_http: impl CacheHttp,
         reaction_type: ReactionType,
-        burst: bool,
     ) -> Result<Reaction> {
         #[cfg_attr(not(feature = "cache"), allow(unused_mut))]
         let mut user_id = None;
@@ -615,30 +593,13 @@ impl Message {
                         self.channel_id,
                         Permissions::ADD_REACTIONS,
                     )?;
-
-                    if burst {
-                        utils::user_has_perms_cache(
-                            cache,
-                            self.channel_id,
-                            Permissions::USE_EXTERNAL_EMOJIS,
-                        )?;
-                    }
                 }
 
                 user_id = Some(cache.current_user().id);
             }
         }
 
-        let reaction_types = if burst {
-            cache_http
-                .http()
-                .create_super_reaction(self.channel_id, self.id, &reaction_type)
-                .await?;
-            ReactionTypes::Burst
-        } else {
-            cache_http.http().create_reaction(self.channel_id, self.id, &reaction_type).await?;
-            ReactionTypes::Normal
-        };
+        cache_http.http().create_reaction(self.channel_id, self.id, &reaction_type).await?;
 
         Ok(Reaction {
             channel_id: self.channel_id,
@@ -648,9 +609,9 @@ impl Message {
             guild_id: self.guild_id,
             member: self.member.as_deref().map(|member| member.clone().into()),
             message_author_id: None,
-            burst,
+            burst: false,
             burst_colours: None,
-            reaction_type: reaction_types,
+            reaction_type: ReactionTypes::Normal,
         })
     }
 

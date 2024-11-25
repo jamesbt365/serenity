@@ -841,7 +841,6 @@ impl Http {
         channel_id: ChannelId,
         message_id: MessageId,
         reaction_type: &ReactionType,
-        burst: bool,
     ) -> Result<()> {
         self.wind(204, Request {
             body: None,
@@ -853,7 +852,7 @@ impl Http {
                 message_id,
                 reaction: &reaction_type.as_data(),
             },
-            params: Some(vec![("burst", burst.to_string())]),
+            params: None,
         })
         .await
     }
@@ -865,19 +864,8 @@ impl Http {
         message_id: MessageId,
         reaction_type: &ReactionType,
     ) -> Result<()> {
-        self.create_reaction_(channel_id, message_id, reaction_type, false).await
+        self.create_reaction_(channel_id, message_id, reaction_type).await
     }
-
-    /// Super reacts to a message.
-    pub async fn create_super_reaction(
-        &self,
-        channel_id: ChannelId,
-        message_id: MessageId,
-        reaction_type: &ReactionType,
-    ) -> Result<()> {
-        self.create_reaction_(channel_id, message_id, reaction_type, true).await
-    }
-
     /// Creates a role.
     pub async fn create_role(
         &self,
