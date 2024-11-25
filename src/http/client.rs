@@ -836,7 +836,8 @@ impl Http {
         .await
     }
 
-    async fn create_reaction_(
+    /// Reacts to a message.
+    pub async fn create_reaction(
         &self,
         channel_id: ChannelId,
         message_id: MessageId,
@@ -855,16 +856,6 @@ impl Http {
             params: None,
         })
         .await
-    }
-
-    /// Reacts to a message.
-    pub async fn create_reaction(
-        &self,
-        channel_id: ChannelId,
-        message_id: MessageId,
-        reaction_type: &ReactionType,
-    ) -> Result<()> {
-        self.create_reaction_(channel_id, message_id, reaction_type).await
     }
     /// Creates a role.
     pub async fn create_role(
