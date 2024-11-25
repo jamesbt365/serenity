@@ -57,6 +57,7 @@ macro_rules! event_handler {
                 $( #[doc = $doc] )*
                 $( #[cfg(feature = $feature)] )?
                 $( #[deprecated = $deprecated] )?
+                #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
                 $variant_name {
                     $( $arg_name: $arg_type ),*
                 },
