@@ -64,6 +64,17 @@ impl Interaction {
         }
     }
 
+    /// Guild ID the interaction was sent from, if any.
+    #[must_use]
+    pub fn guild_id(&self) -> Option<GuildId> {
+        match self {
+            Self::Ping(_) => None,
+            Self::Command(i) | Self::Autocomplete(i) => i.guild_id,
+            Self::Component(i) => i.guild_id,
+            Self::Modal(i) => i.guild_id,
+        }
+    }
+
     /// Gets the interaction application Id
     #[must_use]
     pub fn application_id(&self) -> ApplicationId {
