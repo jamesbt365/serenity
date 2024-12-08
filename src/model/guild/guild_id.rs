@@ -3,6 +3,8 @@ use std::fmt;
 #[cfg(feature = "model")]
 use futures::stream::Stream;
 
+#[cfg(all(feature = "unstable_discord_api", feature = "model"))]
+use crate::builder::EditGuildIncidentActions;
 #[cfg(feature = "model")]
 use crate::builder::{
     AddMember,
@@ -1694,6 +1696,25 @@ impl GuildId {
     /// the request is not in the guild.
     pub async fn get_active_threads(self, http: impl AsRef<Http>) -> Result<ThreadsData> {
         http.as_ref().get_guild_active_threads(self).await
+    }
+
+    /// Edits the guild incident actions
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Http`] if invalid data is given. See [Discord's docs] for more details.
+    ///
+    /// May also return [`Error::Json`] if there is an error in deserializing the API response.
+    ///
+    /// [Discord's docs]: https://github.com/discord/discord-api-docs/pull/6396
+    #[cfg(feature = "unstable_discord_api")]
+    pub async fn edit_guild_incident_actions(
+        self,
+        http: &Http,
+        guild_id: GuildId,
+        builder: EditGuildIncidentActions,
+    ) -> Result<IncidentsData> {
+        builder.execute(http, guild_id).await
     }
 }
 

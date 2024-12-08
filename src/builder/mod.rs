@@ -60,6 +60,8 @@ mod create_webhook;
 mod edit_automod_rule;
 mod edit_channel;
 mod edit_guild;
+#[cfg(feature = "unstable_discord_api")]
+mod edit_guild_incident_actions;
 mod edit_guild_welcome_screen;
 mod edit_guild_widget;
 mod edit_interaction_response;
@@ -102,6 +104,8 @@ pub use create_webhook::*;
 pub use edit_automod_rule::*;
 pub use edit_channel::*;
 pub use edit_guild::*;
+#[cfg(feature = "unstable_discord_api")]
+pub use edit_guild_incident_actions::*;
 pub use edit_guild_welcome_screen::*;
 pub use edit_guild_widget::*;
 pub use edit_interaction_response::*;

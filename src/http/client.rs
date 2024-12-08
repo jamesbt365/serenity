@@ -4779,6 +4779,26 @@ impl Http {
         .await
     }
 
+    /// Modify the guild's incident actions.
+    #[cfg(feature = "unstable_discord_api")]
+    pub async fn edit_guild_incident_actions(
+        &self,
+        guild_id: GuildId,
+        map: &impl serde::Serialize,
+    ) -> Result<IncidentsData> {
+        self.fire(Request {
+            body: Some(to_vec(map)?),
+            multipart: None,
+            headers: None,
+            method: LightMethod::Put,
+            route: Route::GuildIncidentActions {
+                guild_id,
+            },
+            params: None,
+        })
+        .await
+    }
+
     /// Starts typing in the specified [`Channel`] for an indefinite period of time.
     ///
     /// Returns [`Typing`] that is used to trigger the typing. [`Typing::stop`] must be called on
