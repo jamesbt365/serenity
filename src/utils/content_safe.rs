@@ -239,7 +239,9 @@ fn clean_mention(
                 if let Some(guild) = cache.guild(guild_id) {
                     if let Some(member) = guild.members.get(&id) {
                         return if options.show_discriminator {
-                            format!("@{}", member.distinct())
+                            #[allow(deprecated)]
+                            let name = member.distinct();
+                            format!("@{name}")
                         } else {
                             format!("@{}", member.display_name())
                         }
