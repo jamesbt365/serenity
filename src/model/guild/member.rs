@@ -240,6 +240,7 @@ impl Member {
     /// Returns the DiscordTag of a Member, taking possible nickname into account.
     #[inline]
     #[must_use]
+    #[deprecated = "Use User::tag to get the correct Discord username format or Self::display_name for the name that users will see."]
     pub fn distinct(&self) -> String {
         if let Some(discriminator) = self.user.discriminator {
             format!("{}#{:04}", self.display_name(), discriminator.get())
