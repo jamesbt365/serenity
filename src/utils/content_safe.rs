@@ -361,12 +361,14 @@ mod tests {
             content_safe(&cache, "<@100000000000000001>", &options, &[outside_cache_user])
         );
 
+        #[allow(deprecated)]
         let options = options.show_discriminator(false);
         assert_eq!(
             format!("@{}", user.name),
             content_safe(&cache, "<@!100000000000000000>", &options, &[])
         );
 
+        #[allow(deprecated)]
         let options = options.show_discriminator(false);
         assert_eq!(
             format!("@{}", user.name),
