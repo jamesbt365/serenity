@@ -253,7 +253,7 @@ impl ShardRunner {
                     );
                     break;
                 },
-                _ => continue,
+                _ => {},
             }
         }
 
