@@ -106,6 +106,9 @@ pub struct Message {
     pub flags: Option<MessageFlags>,
     /// The message that was replied to using this message.
     pub referenced_message: Option<Box<Message>>, // Boxed to avoid recursion
+    /// An array of message snapshots, known as forwarded messages.
+    #[serde(default, deserialize_with = "deserialize_snapshots")]
+    pub message_snapshots: Vec<MessageSnapshot>,
     #[cfg_attr(not(ignore_serenity_deprecated), deprecated = "Use interaction_metadata")]
     pub interaction: Option<Box<MessageInteraction>>,
     /// Sent if the message is a response to an [`Interaction`].
@@ -1188,6 +1191,47 @@ pub struct ChannelMention {
     pub kind: ChannelType,
     /// The name of the channel
     pub name: String,
+}
+
+/// [Discord docs](https://discord.com/developers/docs/resources/message#message-snapshot-structure)
+///
+/// For field documentation, see [`Message`].
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct MessageSnapshot {
+    pub content: String,
+    pub timestamp: Timestamp,
+    pub edited_timestamp: Option<Timestamp>,
+    pub mentions: Vec<User>,
+    #[serde(default)]
+    pub mention_roles: Vec<RoleId>,
+    pub attachments: Vec<Attachment>,
+    pub embeds: Vec<Embed>,
+    #[serde(rename = "type")]
+    pub kind: MessageType,
+    pub flags: Option<MessageFlags>,
+    #[serde(default)]
+    pub components: Vec<ActionRow>,
+    #[serde(default)]
+    pub sticker_items: Vec<StickerItem>,
+}
+
+/// Custom deserialization function to handle the nested "message" field
+fn deserialize_snapshots<'de, D>(deserializer: D) -> Result<Vec<MessageSnapshot>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct MessageSnapshotWrapper {
+        pub message: MessageSnapshot,
+    }
+
+    let snapshots: Vec<MessageSnapshotWrapper> = Deserialize::deserialize(deserializer)?;
+
+    let result = snapshots.into_iter().map(|wrapper| wrapper.message).collect();
+
+    Ok(result)
 }
 
 bitflags! {
