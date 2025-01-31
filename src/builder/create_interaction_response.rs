@@ -168,7 +168,7 @@ impl Builder for CreateInteractionResponse {
             if msg.allowed_mentions.is_none() {
                 msg.allowed_mentions.clone_from(&http.default_allowed_mentions);
             }
-        };
+        }
 
         http.create_interaction_response(ctx.0, ctx.1, &self, files).await
     }
@@ -296,7 +296,7 @@ impl CreateInteractionResponseMessage {
             flags |= InteractionResponseFlags::EPHEMERAL;
         } else {
             flags &= !InteractionResponseFlags::EPHEMERAL;
-        };
+        }
 
         self.flags = Some(flags);
         self

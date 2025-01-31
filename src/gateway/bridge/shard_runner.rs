@@ -162,7 +162,7 @@ impl ShardRunner {
                                     return Ok(());
                                 }
                             },
-                        };
+                        }
                     }
                 },
                 None => {},

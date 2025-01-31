@@ -152,7 +152,7 @@ impl CreateInteractionResponseFollowup {
             flags |= MessageFlags::EPHEMERAL;
         } else {
             flags &= !MessageFlags::EPHEMERAL;
-        };
+        }
 
         self.flags = Some(flags);
         self

@@ -920,7 +920,7 @@ fn flatten_group_to_string(
             group.prefixes.join("`, `"),
         )?;
         summary_or_prefixes = true;
-    };
+    }
 
     if summary_or_prefixes {
         writeln!(group_text)?;
@@ -1254,7 +1254,7 @@ fn single_command_to_plain_string(help_options: &HelpOptions, command: &Command<
 
     if let Some(description) = command.description {
         writeln!(result, "**{}**: {description}", help_options.description_label).unwrap();
-    };
+    }
 
     if let Some(usage) = command.usage {
         if let Some(first_prefix) = command.group_prefixes.first() {
