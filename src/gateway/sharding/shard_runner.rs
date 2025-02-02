@@ -10,7 +10,7 @@ use tracing::{debug, error, info, trace, warn};
 
 #[cfg(feature = "collector")]
 use super::CollectorCallback;
-use super::{Shard, ShardAction, ShardId, ShardManager, ShardStageUpdateEvent};
+use super::{ReconnectType, Shard, ShardAction, ShardId, ShardManager, ShardStageUpdateEvent};
 #[cfg(feature = "cache")]
 use crate::cache::Cache;
 #[cfg(feature = "framework")]
@@ -23,9 +23,7 @@ use crate::gateway::{ActivityData, ChunkGuildFilter, GatewayError};
 use crate::http::Http;
 use crate::internal::prelude::*;
 use crate::internal::tokio::spawn_named;
-#[cfg(feature = "voice")]
-use crate::model::event::Event;
-use crate::model::event::GatewayEvent;
+use crate::model::event::{Event, GatewayEvent};
 use crate::model::id::GuildId;
 use crate::model::user::OnlineStatus;
 
@@ -118,7 +116,7 @@ impl ShardRunner {
             }
 
             let pre = self.shard.stage();
-            let action = self.recv_event().await?;
+            let (event, action, successful) = self.recv_event().await?;
             let post = self.shard.stage();
 
             if post != pre {
@@ -139,83 +137,88 @@ impl ShardRunner {
                 }
             }
 
-            if let Some(action) = action {
-                match action {
-                    ShardAction::Reconnect => {
-                        self.reconnect().await;
-                        return Ok(());
-                    },
-                    ShardAction::Heartbeat => {
-                        if let Err(e) = self.shard.heartbeat().await {
-                            debug!(
-                            "[ShardRunner {:?}] Reconnecting due to error while heartbeating: {:?}",
+            match action {
+                Some(ShardAction::Reconnect(ReconnectType::Reidentify)) => {
+                    self.request_restart().await;
+                    return Ok(());
+                },
+                Some(other) => {
+                    if let Err(e) = self.action(&other).await {
+                        debug!(
+                            "[ShardRunner {:?}] Reconnecting due to error performing {:?}: {:?}",
                             self.shard.shard_info(),
+                            other,
                             e
                         );
-                            self.reconnect().await;
-                            return Ok(());
-                        }
-                    },
-                    ShardAction::Identify => {
-                        if let Err(e) = self.shard.identify().await {
-                            debug!(
-                            "[ShardRunner {:?}] Reconnecting due to error while identifying: {:?}",
-                            self.shard.shard_info(),
-                            e
-                        );
-                            self.reconnect().await;
-                            return Ok(());
-                        }
-                    },
-                    ShardAction::Dispatch(event) => {
-                        #[cfg(feature = "voice")]
-                        {
-                            self.handle_voice_event(&event).await;
-                        }
+                        match self.shard.reconnection_type() {
+                            ReconnectType::Reidentify => {
+                                self.request_restart().await;
+                                return Ok(());
+                            },
+                            ReconnectType::Resume => {
+                                if let Err(why) = self.shard.resume().await {
+                                    warn!(
+                                        "[ShardRunner {:?}] Resume failed, reidentifying: {:?}",
+                                        self.shard.shard_info(),
+                                        why
+                                    );
 
-                        let context = self.make_context();
-                        let can_dispatch = self
-                            .event_handler
-                            .as_ref()
-                            .is_none_or(|handler| handler.filter_event(&context, &event))
-                            && self
-                                .raw_event_handler
-                                .as_ref()
-                                .is_none_or(|handler| handler.filter_event(&context, &event));
-
-                        if can_dispatch {
-                            #[cfg(feature = "collector")]
-                            {
-                                let read_lock = self.collectors.read();
-                                // search all collectors to be removed and clone the Arcs
-                                let to_remove: Vec<_> = read_lock
-                                    .iter()
-                                    .filter(|callback| !callback.0(&event))
-                                    .cloned()
-                                    .collect();
-                                drop(read_lock);
-                                // remove all found arcs from the collection
-                                // this compares the inner pointer of the Arc
-                                if !to_remove.is_empty() {
-                                    self.collectors.write().retain(|f| !to_remove.contains(f));
+                                    self.request_restart().await;
+                                    return Ok(());
                                 }
-                            }
-                            spawn_named(
-                                "shard_runner::dispatch",
-                                dispatch_model(
-                                    event,
-                                    context,
-                                    #[cfg(feature = "framework")]
-                                    self.framework.clone(),
-                                    self.event_handler.clone(),
-                                    self.raw_event_handler.clone(),
-                                ),
-                            );
+                            },
                         }
-                    },
+                    }
+                },
+                None => {},
+            }
+
+            if let Some(event) = event {
+                let context = self.make_context();
+                let can_dispatch = self
+                    .event_handler
+                    .as_ref()
+                    .is_none_or(|handler| handler.filter_event(&context, &event))
+                    && self
+                        .raw_event_handler
+                        .as_ref()
+                        .is_none_or(|handler| handler.filter_event(&context, &event));
+
+                if can_dispatch {
+                    #[cfg(feature = "collector")]
+                    {
+                        let read_lock = self.collectors.read();
+                        // search all collectors to be removed and clone the Arcs
+                        let to_remove: Vec<_> = read_lock
+                            .iter()
+                            .filter(|callback| !callback.0(&event))
+                            .cloned()
+                            .collect();
+                        drop(read_lock);
+                        // remove all found arcs from the collection
+                        // this compares the inner pointer of the Arc
+                        if !to_remove.is_empty() {
+                            self.collectors.write().retain(|f| !to_remove.contains(f));
+                        }
+                    }
+                    spawn_named(
+                        "shard_runner::dispatch",
+                        dispatch_model(
+                            event,
+                            context,
+                            #[cfg(feature = "framework")]
+                            self.framework.clone(),
+                            self.event_handler.clone(),
+                            self.raw_event_handler.clone(),
+                        ),
+                    );
                 }
             }
 
+            if !successful && !self.shard.stage().is_connecting() {
+                self.request_restart().await;
+                return Ok(());
+            }
             trace!("[ShardRunner {:?}] loop iteration reached the end.", self.shard.shard_info());
         }
     }
@@ -223,6 +226,27 @@ impl ShardRunner {
     /// Clones the internal copy of the Sender to the shard runner.
     pub(super) fn runner_tx(&self) -> Sender<ShardRunnerMessage> {
         self.runner_tx.clone()
+    }
+
+    /// Takes an action that a [`Shard`] has determined should happen and then does it.
+    ///
+    /// For example, if the shard says that an Identify message needs to be sent, this will do
+    /// that.
+    ///
+    /// # Errors
+    ///
+    /// Returns
+    #[cfg_attr(feature = "tracing_instrument", instrument(skip(self, action)))]
+    async fn action(&mut self, action: &ShardAction) -> Result<()> {
+        match *action {
+            ShardAction::Reconnect(ReconnectType::Reidentify) => {
+                self.request_restart().await;
+                Ok(())
+            },
+            ShardAction::Reconnect(ReconnectType::Resume) => self.shard.resume().await,
+            ShardAction::Heartbeat => self.shard.heartbeat().await,
+            ShardAction::Identify => self.shard.identify().await,
+        }
     }
 
     // Checks if the ID received to shutdown is equivalent to the ID of the shard this runner is
@@ -389,27 +413,39 @@ impl ShardRunner {
     /// Returns a received event, as well as whether reading the potentially present event was
     /// successful.
     #[cfg_attr(feature = "tracing_instrument", instrument(skip(self)))]
-    async fn recv_event(&mut self) -> Result<Option<ShardAction>> {
+    async fn recv_event(&mut self) -> Result<(Option<Event>, Option<ShardAction>, bool)> {
         let gateway_event = match self.shard.client.recv_json().await {
             Ok(Some(inner)) => Ok(inner),
             Ok(None) => {
-                return Ok(None);
+                return Ok((None, None, true));
             },
             Err(Error::Tungstenite(tung_err)) if matches!(*tung_err, TungsteniteError::Io(_)) => {
                 debug!("Attempting to auto-reconnect");
-                self.reconnect().await;
 
-                return Ok(None);
+                match self.shard.reconnection_type() {
+                    ReconnectType::Reidentify => return Ok((None, None, false)),
+                    ReconnectType::Resume => {
+                        if let Err(why) = self.shard.resume().await {
+                            warn!("Failed to resume: {:?}", why);
+
+                            // Don't spam reattempts on internet connection loss
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+                            return Ok((None, None, false));
+                        }
+                    },
+                }
+
+                return Ok((None, None, true));
             },
             Err(why) => Err(why),
         };
 
         let is_ack = matches!(gateway_event, Ok(GatewayEvent::HeartbeatAck));
-        let action = match self.shard.handle_event(gateway_event) {
-            Ok(action) => action,
+        let (action, event) = match self.shard.handle_event(gateway_event) {
+            Ok((action, event)) => (action, event),
             Err(Error::Gateway(
                 why @ (GatewayError::InvalidAuthentication
-                | GatewayError::InvalidApiVersion
                 | GatewayError::InvalidGatewayIntents
                 | GatewayError::DisallowedGatewayIntents),
             )) => {
@@ -417,7 +453,6 @@ impl ShardRunner {
 
                 let why_clone = match why {
                     GatewayError::InvalidAuthentication => GatewayError::InvalidAuthentication,
-                    GatewayError::InvalidApiVersion => GatewayError::InvalidApiVersion,
                     GatewayError::InvalidGatewayIntents => GatewayError::InvalidGatewayIntents,
                     GatewayError::DisallowedGatewayIntents => {
                         GatewayError::DisallowedGatewayIntents
@@ -428,10 +463,10 @@ impl ShardRunner {
                 self.manager.return_with_value(Err(why_clone)).await;
                 return Err(Error::Gateway(why));
             },
-            Err(Error::Json(_)) => return Ok(None),
+            Err(Error::Json(_)) => return Ok((None, None, true)),
             Err(why) => {
                 error!("Shard handler recieved err: {why:?}");
-                return Ok(None);
+                return Ok((None, None, true));
             },
         };
 
@@ -439,27 +474,14 @@ impl ShardRunner {
             self.update_manager().await;
         }
 
-        Ok(action)
-    }
-
-    #[cfg_attr(feature = "tracing_instrument", instrument(skip(self)))]
-    async fn reconnect(&mut self) {
-        if self.shard.session_id().is_some() {
-            if let Err(why) = self.shard.resume().await {
-                warn!(
-                    "[ShardRunner {:?}] Resume failed, reidentifying: {:?}",
-                    self.shard.shard_info(),
-                    why,
-                );
-
-                // Don't spam reattempts on internet connection loss
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-
-                self.request_restart().await;
+        #[cfg(feature = "voice")]
+        {
+            if let Some(event) = &event {
+                self.handle_voice_event(event).await;
             }
-        } else {
-            self.request_restart().await;
         }
+
+        Ok((event, action, true))
     }
 
     #[cfg_attr(feature = "tracing_instrument", instrument(skip(self)))]

@@ -127,7 +127,7 @@ pub mod all {
     #[doc(no_inline)]
     pub use crate::collector::*;
     #[doc(no_inline)]
-    pub use crate::constants::*;
+    pub use crate::constants::{close_codes::*, *};
     #[cfg(feature = "framework")]
     #[doc(no_inline)]
     pub use crate::framework::*;
