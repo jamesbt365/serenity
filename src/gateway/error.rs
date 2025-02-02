@@ -13,7 +13,7 @@ pub enum Error {
     /// There was an error building a URL.
     BuildingUrl,
     /// The connection closed, potentially uncleanly.
-    Closed(Option<CloseFrame>),
+    Closed(Option<CloseFrame<'static>>),
     /// Expected a Hello during a handshake
     ExpectedHello,
     /// When there was an error sending a heartbeat.
