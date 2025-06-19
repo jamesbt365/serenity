@@ -290,7 +290,7 @@ pub struct User {
 #[derive(Clone, Debug, PartialEq, Default, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub struct PrimaryGuild {
     pub identity_guild_id: GuildId,
-    pub identity_enabled: bool,
+    pub identity_enabled: Option<bool>,
     pub tag: Option<FixedString>,
     pub badge: Option<ImageHash>,
 }
