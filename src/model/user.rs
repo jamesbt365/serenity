@@ -292,7 +292,7 @@ pub struct PrimaryGuild {
     pub identity_guild_id: GuildId,
     pub identity_enabled: Option<bool>,
     pub tag: Option<FixedString>,
-    pub badge: Option<ImageHash>,
+    // pub badge: Option<ImageHash>,
 }
 
 impl ExtractKey<UserId> for User {
