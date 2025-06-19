@@ -289,8 +289,8 @@ pub struct User {
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
 #[derive(Clone, Debug, PartialEq, Default, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub struct PrimaryGuild {
-    pub identify_guild_id: GuildId,
-    pub identify_enabled: bool,
+    pub identity_guild_id: GuildId,
+    pub identity_enabled: bool,
     pub tag: Option<FixedString>,
     pub badge: Option<ImageHash>,
 }
