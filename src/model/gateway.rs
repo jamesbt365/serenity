@@ -275,6 +275,7 @@ impl PresenceUser {
             email: self.email,
             flags: self.public_flags.unwrap_or_default(),
             premium_type: PremiumType::None,
+            primary_guild: None,
             __generated_flags: UserGeneratedFlags::empty(),
         };
 
