@@ -283,6 +283,16 @@ pub struct User {
     /// [Discord docs](https://discord.com/developers/docs/topics/gateway-events#message-create-message-create-extra-fields).
     // Box required to avoid infinitely recursive types
     pub member: Option<Box<PartialMember>>,
+    pub primary_guild: Option<PrimaryGuild>,
+}
+
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PrimaryGuild {
+    identify_guild_id: GuildId,
+    identify_enabled: bool,
+    tag: String,
+    badge: ImageHash,
 }
 
 impl ExtractKey<UserId> for User {
