@@ -48,6 +48,9 @@ pub struct EditRole<'a> {
     #[serde(rename = "color")]
     colour: Option<Colour>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "colors")]
+    colours: Option<RoleColours>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     hoist: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     icon: Option<Option<ImageData<'a>>>,
@@ -78,6 +81,7 @@ impl<'a> EditRole<'a> {
             permissions: Some(role.permissions.bits()),
             position: Some(role.position),
             colour: Some(role.colour),
+            colours: Some(role.colours),
             unicode_emoji: role.unicode_emoji.as_ref().map(|v| Some(Cow::Borrowed(v.as_str()))),
             audit_log_reason: None,
             // TODO: Do we want to download role.icon?
@@ -88,6 +92,12 @@ impl<'a> EditRole<'a> {
     /// Set the colour of the role.
     pub fn colour(mut self, colour: impl Into<Colour>) -> Self {
         self.colour = Some(colour.into());
+        self
+    }
+
+    /// Set the colours of the role.
+    pub fn colours(mut self, colours: RoleColours) -> Self {
+        self.colours = Some(colours);
         self
     }
 

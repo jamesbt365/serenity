@@ -29,6 +29,9 @@ pub struct Role {
     /// The colour of the role.
     #[serde(rename = "color")]
     pub colour: Colour,
+    /// the role's colours
+    #[serde(rename = "colors")]
+    pub colours: RoleColours,
     /// Indicator of whether the role is pinned above lesser roles.
     ///
     /// In the client, this causes [`Member`]s in the role to be seen above those in roles with a
@@ -66,6 +69,23 @@ pub struct Role {
     pub icon: Option<ImageHash>,
     /// Role unicoded image.
     pub unicode_emoji: Option<FixedString>,
+}
+
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct RoleColours {
+    /// the role primary color, this is always the same as the role's `colour`  
+    #[serde(rename = "primary_color")]
+    pub primary_colour: Colour,
+    /// the role secondary color, this will make the role gradient between the other provided
+    /// colours
+    #[serde(rename = "secondary_color")]
+    pub secondary_colour: Option<Colour>,
+    /// the role tertiary color, this will make the role gradient between the other provided
+    /// colours
+    #[serde(rename = "tertiary_color")]
+    pub tertiary_colour: Option<Colour>,
 }
 
 #[cfg(feature = "model")]
