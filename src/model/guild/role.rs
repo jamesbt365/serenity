@@ -73,7 +73,8 @@ pub struct Role {
 
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Deserialize, Serialize)]
-#[non_exhaustive]
+// #[non_exhaustive]
+// TODO: builder format this later
 pub struct RoleColours {
     /// the role primary color, this is always the same as the role's `colour`  
     #[serde(rename = "primary_color")]
