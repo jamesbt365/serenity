@@ -296,8 +296,6 @@ pub struct AvatarDecorationData {
     // TODO: doc
     sku_id: SkuId,
     asset: ImageHash,
-    // TODO: check if the timestamp type parses unix
-    expires_at: u64,
 }
 
 /// The data for a user's avatar decoration
