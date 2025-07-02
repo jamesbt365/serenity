@@ -294,8 +294,8 @@ pub struct User {
 #[non_exhaustive]
 pub struct AvatarDecorationData {
     // TODO: doc
-    sku_id: SkuId,
-    asset: ImageHash,
+    pub sku_id: SkuId,
+    pub asset: ImageHash,
 }
 
 /// The data for a user's avatar decoration
@@ -303,17 +303,17 @@ pub struct AvatarDecorationData {
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq, Serialize)]
 #[non_exhaustive]
 pub struct Collectibles {
-    nameplate: Option<Nameplate>,
+    pub nameplate: Option<Nameplate>,
 }
 
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
 #[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq, Serialize)]
 #[non_exhaustive]
 pub struct Nameplate {
-    sku_id: SkuId,
-    asset: String,
-    label: String,
-    palette: String,
+    pub sku_id: SkuId,
+    pub asset: String,
+    pub label: String,
+    pub palette: String,
 }
 
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
