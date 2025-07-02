@@ -284,6 +284,38 @@ pub struct User {
     // Box required to avoid infinitely recursive types
     pub member: Option<Box<PartialMember>>,
     pub primary_guild: Option<PrimaryGuild>,
+    pub avatar_decoration_data: Option<AvatarDecorationData>,
+    // TODO doc
+    pub collectibles: Option<Collectibles>,
+}
+
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct AvatarDecorationData {
+    // TODO: doc
+    sku_id: SkuId,
+    asset: ImageHash,
+    // TODO: check if the timestamp type parses unix
+    expires_at: u64,
+}
+
+/// The data for a user's avatar decoration
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
+pub struct Collectibles {
+    nameplate: Option<Nameplate>,
+}
+
+#[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
+pub struct Nameplate {
+    sku_id: SkuId,
+    asset: String,
+    label: String,
+    palette: String,
 }
 
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]

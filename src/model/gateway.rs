@@ -277,6 +277,8 @@ impl PresenceUser {
             premium_type: PremiumType::None,
             primary_guild: None,
             __generated_flags: UserGeneratedFlags::empty(),
+            avatar_decoration_data: None,
+            collectibles: None,
         };
 
         user.set_bot(bot);

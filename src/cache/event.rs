@@ -221,6 +221,7 @@ impl CacheUpdate for GuildMemberUpdateEvent {
                     communication_disabled_until: self.communication_disabled_until,
                     flags: GuildMemberFlags::default(),
                     unusual_dm_activity_until: self.unusual_dm_activity_until,
+                    avatar_decoration_data: self.avatar_decoration_data,
                 };
 
                 new_member.set_pending(self.pending());
@@ -437,6 +438,7 @@ impl CacheUpdate for PresenceUpdateEvent {
                             communication_disabled_until: None,
                             flags: GuildMemberFlags::default(),
                             unusual_dm_activity_until: None,
+                            avatar_decoration_data: None,
                             __generated_flags: MemberGeneratedFlags::empty(),
                         });
                     }
