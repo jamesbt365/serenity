@@ -22,6 +22,8 @@ use crate::model::utils::StrOrInt;
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
 #[derive(Clone, Debug)]
 #[non_exhaustive]
+// breaking to change this on current, not sure if worth on next
+#[allow(clippy::large_enum_variant)]
 pub enum Interaction {
     Ping(PingInteraction),
     Command(CommandInteraction),
